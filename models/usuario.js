@@ -9,9 +9,11 @@ const UsuarioSchema = Schema({
   email: { type: String, unique: true },
   password: String,
   dni: Number,
+  edad: Number,
   fechaNacimiento: String,
   telefono: Number,
-  turno:String,
+  telefonoEmergencia: Number,
+  turno: String,
   rol: String,
   fechaIngreso: {
     type: Date,

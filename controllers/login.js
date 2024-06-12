@@ -2,16 +2,17 @@ const { response } = require("express");
 const bcrypt = require("bcryptjs");
 const Usuario = require("../models/usuario");
 
-//crear usuario
 const crearUsuario = async (req, res = response) => {
   const {
     nombre,
     apellido,
     dni,
+    edad,
     email,
     password,
     fechaNacimiento,
     telefono,
+    telefonoEmergencia,
     turno,
     rol,
   } = req.body;
@@ -26,22 +27,22 @@ const crearUsuario = async (req, res = response) => {
     }
 
     usuario = new Usuario(req.body);
-    //encriptar contraseña
     const salt = bcrypt.genSaltSync();
     usuario.password = bcrypt.hashSync(password, salt);
     await usuario.save();
 
     res.status(201).json({
       ok: true,
-      //   uid: usuario.id,
       msg: "usuario creado",
       nombre: nombre.usuario,
       apellido,
-      dni,
       email,
       password,
+      dni,
+      edad,
       fechaNacimiento,
       telefono,
+      telefonoEmergencia,
       turno,
       rol,
     });
@@ -53,7 +54,6 @@ const crearUsuario = async (req, res = response) => {
   }
 };
 
-// obtener usuario rol alumno
 const obtenerUsuario = async (req, res = response) => {
   const alumnos = await Usuario.find(req.query);
   res.json({
@@ -62,7 +62,6 @@ const obtenerUsuario = async (req, res = response) => {
   });
 };
 
-//actualizar usuario rol alumno
 const actualizarUsuario = async (req, res = response) => {
   const alumnoId = req.params.id;
 
@@ -76,12 +75,11 @@ const actualizarUsuario = async (req, res = response) => {
       });
     }
 
-    //creacion nuevo alumno
+
     const nuevoAlumno = {
       ...req.body,
     };
 
-    //actualizacion nuevo alumno
     const alumnoActualizado = await Usuario.findByIdAndUpdate(
       alumnoId,
       nuevoAlumno,
@@ -99,7 +97,6 @@ const actualizarUsuario = async (req, res = response) => {
   }
 };
 
-// eliminar usuario rol alumno
 const eliminarUsuario = async (req, res = response) => {
   const alumnoId = req.params.id;
 
@@ -125,7 +122,6 @@ const eliminarUsuario = async (req, res = response) => {
   }
 };
 
-// login usuario
 const loginUsuario = async (req, res = response) => {
   const { email, password } = req.body;
   try {
@@ -147,11 +143,11 @@ const loginUsuario = async (req, res = response) => {
 
     res.json({
       ok: true,
-   
+
       msg: "login",
       nombre: usuario.nombre,
       rol: usuario.rol,
-     
+
     });
   } catch (error) {
     res.status(500).json({
