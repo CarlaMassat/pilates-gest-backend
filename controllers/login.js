@@ -3,19 +3,7 @@ const bcrypt = require("bcryptjs");
 const Usuario = require("../models/usuario");
 
 const crearUsuario = async (req, res = response) => {
-  const {
-    nombre,
-    apellido,
-    dni,
-    edad,
-    email,
-    password,
-    fechaNacimiento,
-    telefono,
-    telefonoEmergencia,
-    turno,
-    rol,
-  } = req.body;
+  const { nombre, apellido, email, password, dni } = req.body;
 
   try {
     let usuario = await Usuario.findOne({ email });
@@ -39,12 +27,6 @@ const crearUsuario = async (req, res = response) => {
       email,
       password,
       dni,
-      edad,
-      fechaNacimiento,
-      telefono,
-      telefonoEmergencia,
-      turno,
-      rol,
     });
   } catch (error) {
     res.status(500).json({
@@ -74,7 +56,6 @@ const actualizarUsuario = async (req, res = response) => {
         msg: "no existe alumno con ese id",
       });
     }
-
 
     const nuevoAlumno = {
       ...req.body,
@@ -123,9 +104,9 @@ const eliminarUsuario = async (req, res = response) => {
 };
 
 const loginUsuario = async (req, res = response) => {
-  const { email, password } = req.body;
+  const { email, password, dni } = req.body;
   try {
-    const usuario = await Usuario.findOne({ email });
+    const usuario = await Usuario.findOne({ email, dni });
     if (!usuario) {
       return res.status(400).json({
         ok: false,
@@ -143,11 +124,7 @@ const loginUsuario = async (req, res = response) => {
 
     res.json({
       ok: true,
-
-      msg: "login",
-      nombre: usuario.nombre,
-      rol: usuario.rol,
-
+      msg: "login exitoso",
     });
   } catch (error) {
     res.status(500).json({

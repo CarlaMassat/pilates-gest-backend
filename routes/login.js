@@ -22,12 +22,6 @@ router.post(
       min: 6,
     }),
     check("dni", "El dni es obligatorio").isNumeric(),
-    check("edad", "La edad es obligatoria").isNumeric(),
-    check("fechaNacimiento", "La fecha de nacimiento es obligatoria").not().isEmpty(),
-    check("telefono").isNumeric(),
-
-    check("turno").not().isEmpty(),
-
     validarCampos,
   ],
 
@@ -41,12 +35,11 @@ router.post(
     check("password", "El password debe tener 6 caracteres").isLength({
       min: 6,
     }),
-
+    check("dni", "El dni es obligatorio").isNumeric(),
     validarCampos,
   ],
   loginUsuario
 );
-
 
 router.get("/usuario", obtenerUsuario);
 router.put("/usuario/:id", actualizarUsuario);
