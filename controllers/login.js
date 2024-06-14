@@ -123,8 +123,6 @@ const loginUsuario = async (req, res = response) => {
     }
 
     res.json({
-      ok: true,
-      msg: "login exitoso",
       nombre: usuario.nombre,
     });
   } catch (error) {
