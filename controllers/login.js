@@ -22,7 +22,7 @@ const crearUsuario = async (req, res = response) => {
     res.status(201).json({
       ok: true,
       msg: "usuario creado",
-      nombre: nombre.usuario,
+      nombre: nombre,
       apellido,
       email,
       password,
@@ -125,6 +125,7 @@ const loginUsuario = async (req, res = response) => {
     res.json({
       ok: true,
       msg: "login exitoso",
+      nombre: usuario.nombre,
     });
   } catch (error) {
     res.status(500).json({
