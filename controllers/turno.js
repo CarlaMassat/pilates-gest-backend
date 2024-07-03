@@ -1,19 +1,13 @@
 const { response } = require("express");
 const Turno = require("../models/turno");
-const moment = require("moment");
-moment.locale("es");
 
 const crearTurno = async (req, res = response) => {
   const turno = new Turno(req.body);
   try {
     const turnoGuardar = await turno.save();
-
-    const turnoConAlumnos = await Turno.findById(turnoGuardar._id).populate(
-      "alumnos",
-      "nombre apellido"
-    );
     res.status(201).json({
-      evento: turnoConAlumnos,
+      ok: true,
+      turno: turnoGuardar,
     });
   } catch (error) {
     res.status(500).json({
@@ -23,91 +17,66 @@ const crearTurno = async (req, res = response) => {
 };
 
 const obtenerTurno = async (req, res = response) => {
-  const turnos = await Turno.find().populate([
-    {
-      path: "alumnos",
-      model: "Usuario",
-      select: "nombre apellido rol",
-    },
-  ]);
+  const turnos = await Turno.find();
+
   res.json({
     turnos,
   });
 };
 
 const reprogramarTurnoAlumno = async (req, res = response) => {
-  const { turnoId } = req.params;
-  const { diaNuevo, horaNueva, diaFijo, horaFija } = req.body;
-  const ahora = moment();
-  const fechaTurno = moment(diaNuevo + " " + horaNueva, "YYYY-MM-DD HH:mm");
-  const diferenciaHoras = fechaTurno.diff(ahora, "hours");
-
-  if (diferenciaHoras < 24) {
-    return res.status(400).json({
-      msg: "Solo se pueden reprogramar turnos con al menos 24 horas de antelación.",
-    });
-  }
-
-  if (fechaTurno.day() === 0 || fechaTurno.day() === 6) {
-    return res.status(400).json({
-      msg: "No se pueden reprogramar turnos para sábado o domingo.",
-    });
-  }
+  const turnoId = req.params.id;
 
   try {
-    const diaSemana = fechaTurno.format("dddd");
-    const turnoActualizado = await Turno.findByIdAndUpdate(
-      turnoId,
-      {
-        diaFijo: diaFijo,
-        horaFija: horaFija,
-        dia: diaNuevo,
-        hora: horaNueva,
-        diaSemana: diaSemana,
-      },
-      { new: true }
-    ).populate({
-      path: "alumnos",
-      select: "nombre",
-    });
+    const turno = await Turno.findById(turnoId);
 
-    if (!turnoActualizado) {
+    if (!turno) {
       return res.status(404).json({
-        msg: "No se encontró el turno a reprogramar.",
+        ok: false,
+        msg: "no existe el turno",
       });
     }
 
+    const nuevoTurno = {
+      ...req.body,
+    };
+
+    const turnoActualizar = await Turno.findByIdAndUpdate(turnoId, nuevoTurno, {
+      new: true,
+    });
     res.json({
-      turno: turnoActualizado,
-      msg: "Turno reprogramado exitosamente.",
+      ok: true,
+      turno: turnoActualizar,
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({
-      msg: "Error al reprogramar el turno. Por favor, contacte con el administrador.",
+      ok: false,
+      msg: "por favor hable con el administrador",
     });
   }
 };
 
 const eliminarTurnoAlumno = async (req, res = response) => {
-  const { turnoId } = req.params;
+  const turnoId = req.params.id;
 
   try {
-    const turnoEliminado = await Turno.findByIdAndDelete(turnoId);
+    const turno = await Turno.findById(turnoId);
 
-    if (!turnoEliminado) {
+    if (!turno) {
       return res.status(404).json({
-        msg: "No se encontró el turno a eliminar.",
+        ok: false,
+        msg: "no existe turno",
       });
     }
 
+    await Turno.findByIdAndDelete(turnoId);
     res.json({
-      msg: "Turno eliminado correctamente.",
+      ok: true,
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({
-      msg: "Error al eliminar el turno. Por favor, contacte con el administrador.",
+      ok: false,
+      msg: "por favor hable con el administrador",
     });
   }
 };

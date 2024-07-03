@@ -2,19 +2,15 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const turnoSchema = Schema({
+  nombre:String,
+  apellido:String,
   diaFijo: String,
   horaFija: String,
-  hora: String,
   pack: String,
+  fijo: String,
   tipoActividad: String,
   disponibilidad: String,
-  diaSemana: String,
-  alumnos: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Usuario",
-    },
-  ],
+  rol: String
 });
 
 module.exports = mongoose.model("Turno", turnoSchema);
