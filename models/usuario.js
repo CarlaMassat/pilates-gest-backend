@@ -8,6 +8,11 @@ const UsuarioSchema = Schema({
   email: { type: String, unique: true },
   password: String,
   dni: Number,
+  rol: {
+    type: String,
+    enum: ["admin", "profesor", "alumno"],
+  },
+
   fechaIngreso: {
     type: Date,
     default: () => moment().utc().subtract(3, "hours").toDate(),

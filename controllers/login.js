@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const Usuario = require("../models/usuario");
 
 const crearUsuario = async (req, res = response) => {
-  const { nombre, apellido, email, password, dni } = req.body;
+  const { nombre, apellido, email, password, dni,rol } = req.body;
 
   try {
     let usuario = await Usuario.findOne({ email });
@@ -27,6 +27,7 @@ const crearUsuario = async (req, res = response) => {
       email,
       password,
       dni,
+      rol
     });
   } catch (error) {
     res.status(500).json({
@@ -36,8 +37,9 @@ const crearUsuario = async (req, res = response) => {
   }
 };
 
+// rol alumno
 const obtenerUsuario = async (req, res = response) => {
-  const alumnos = await Usuario.find(req.query);
+  const alumnos = await Usuario.find(req.query).select('nombre apellido');
   res.json({
     ok: true,
     msg: alumnos,
@@ -124,6 +126,8 @@ const loginUsuario = async (req, res = response) => {
 
     res.json({
       nombre: usuario.nombre,
+      rol: usuario.rol
+
     });
   } catch (error) {
     res.status(500).json({
