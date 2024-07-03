@@ -13,6 +13,7 @@ app.use(cors());
 
 // rutas FALTAN RUTA OBTENER, ACTUALIZAR Y ELIMINAR
 app.use('/api/login', require('./routes/login'));
+app.use('/api/turno', require('./routes/turno'))
 
 app.listen(process.env.PORT, () =>{
     console.log(`Servidor corriendo en el puerto ${process.env.PORT}`)
