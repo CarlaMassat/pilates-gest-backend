@@ -19,7 +19,7 @@ const crearHorario = async (req, res) => {
     }
 
     const [hour] = hora.split(":").map(Number);
-    if (hour < 8 || hour >= 20) {
+    if (hour < 8 || hour >= 21) {
       return res.status(400).json({ message: "La hora debe estar entre las 08:00 y las 20:00" });
     }
 
@@ -31,24 +31,14 @@ const crearHorario = async (req, res) => {
     }
 
     // Crear el nuevo horario
-    const fechaActual = new Date();
-    const diaActual = fechaActual.getDate();
-    const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-    const mesActual = meses[fechaActual.getMonth()];
-    const anioActual = fechaActual.getFullYear();
-    const fechaFormateada = `${diaActual} de ${mesActual} de ${anioActual}`;
-
     const horario = new Horario({
       ...req.body,
-      slot: existingCount + 1,
+      slot: existingCount + 1, // Empieza con el próximo slot disponible
       estado: 'fijo',
-      fechaFormateada: fechaFormateada,
     });
 
-    // Marcar como ocupado si es necesario
-    if (horario.slot >= 5) {
-      horario.ocupado = true;
-    }
+    // Marcar como ocupado si es necesario (esto no debería ser necesario aquí ya que slot se empieza en 1)
+    horario.ocupado = existingCount + 1 >= 5;
 
     await horario.save();
 
@@ -57,6 +47,7 @@ const crearHorario = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
 
 
 const obtenerHorario = async (req, res = response) => {
@@ -85,7 +76,7 @@ const actualizarHorario = async (req, res) => {
     }
 
     const [horaNueva, minutosNueva] = hora.split(":").map(Number);
-    if (horaNueva < 8 || horaNueva >= 20) {
+    if (horaNueva < 8 || horaNueva >= 21) {
       return res.status(400).json({ message: "La hora debe estar entre las 08:00 y las 20:00" });
     }
 
@@ -94,6 +85,12 @@ const actualizarHorario = async (req, res) => {
     if (!horarioOriginal) {
       return res.status(404).json({ message: "Horario no encontrado" });
     }
+
+    // Guardar los detalles del horario original para incluir en la respuesta
+    const horarioOriginalReemplazado = {
+      dia: horarioOriginal.dia,
+      hora: horarioOriginal.hora
+    };
 
     // Verificar que la reprogramación se haga con al menos 24 horas de anticipación
     const fechaActual = new Date();
@@ -109,7 +106,6 @@ const actualizarHorario = async (req, res) => {
 
     // Obtener el próximo día para la nueva fecha, basándonos en el día de la semana proporcionado
     const diasSemana = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes"];
-    const diasDeLaSemana = [1, 2, 3, 4, 5]; // Lunes a Viernes
     const diaNuevaIndex = diasSemana.indexOf(dia);
 
     // Ajustar la fechaNueva para que esté en el día de la semana especificado
@@ -126,7 +122,10 @@ const actualizarHorario = async (req, res) => {
     // Contar cuántos horarios ya existen para el mismo día y hora (excluyendo el actual)
     const existingCount = await Horario.countDocuments({ dia, hora, _id: { $ne: id } });
 
-    if (existingCount >= 5) {
+    // Contar cuántos horarios hay en total para el nuevo día y hora
+    const totalCount = await Horario.countDocuments({ dia, hora });
+
+    if (totalCount >= 5) {
       return res.status(400).json({ message: "El horario ya está ocupado, no hay lugar disponible" });
     }
 
@@ -145,16 +144,32 @@ const actualizarHorario = async (req, res) => {
     horarioOriginal.fechaFormateada = fechaFormateada;
     horarioOriginal.estado = 'fijo'; 
 
-    // Marcar como ocupado si es necesario
-    horarioOriginal.ocupado = existingCount + 1 >= 5;
+    // Reiniciar el slot a 1 y marcar como ocupado si es necesario
+    horarioOriginal.slot = 1;
+    horarioOriginal.ocupado = totalCount + 1 >= 5;
 
-    await horarioOriginal.save();
+    // Guardar el horario actualizado
+    const horarioActualizado = await horarioOriginal.save();
 
-    res.status(200).json(horarioOriginal);
+    // Actualizar los slots de los horarios restantes
+    const horariosRestantes = await Horario.find({ dia: horarioOriginalReemplazado.dia, hora: horarioOriginalReemplazado.hora, _id: { $ne: id } }).sort('slot');
+
+    for (let i = 0; i < horariosRestantes.length; i++) {
+      horariosRestantes[i].slot = i + 1; // Ajustar los slots consecutivamente
+      await horariosRestantes[i].save();
+    }
+
+    // Mensaje de éxito
+    res.status(200).json({
+      message: "Horario libre temporario",
+      horarioOriginalReemplazado,
+      horarioActualizado
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 };
+
 
 
 const eliminarHorario = async (req, res) => {
