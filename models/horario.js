@@ -10,8 +10,7 @@ const HorarioSchema = Schema({
     max: 5,
   },
   ocupado: Boolean,
-  fechaFormateada: String,
-
+  // fechaFormateada: String,
   estado: {
     type: String,
     enum: ["fijo", "libre", "libre temporario"],
@@ -19,5 +18,3 @@ const HorarioSchema = Schema({
 });
 
 module.exports = mongoose.model("Horario", HorarioSchema);
-
-
